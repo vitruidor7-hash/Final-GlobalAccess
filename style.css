@@ -61,6 +61,7 @@ h1 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
 }
 
 .save-indicator {
@@ -70,6 +71,39 @@ h1 {
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 500;
+}
+
+/* --- NEW: Tab System --- */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.tab-link {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-light);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px; /* Align with container border */
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-link:hover {
+    color: var(--primary-color);
+}
+
+.tab-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none; /* Hidden by default */
 }
 
 /* --- Section & Card Styling --- */
@@ -100,6 +134,7 @@ th, td {
     padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
 th {
@@ -113,6 +148,17 @@ tbody tr:hover {
     background-color: #fcfcfc;
 }
 
+/* NEW: Style for paid/received rows */
+tbody tr.paid {
+    background-color: #f0fdf4; /* Light green background */
+}
+
+tbody tr.paid input[type="text"] {
+    text-decoration: line-through;
+    color: var(--text-light);
+}
+
+
 .total-row {
     background-color: var(--primary-color) !important;
     color: white;
@@ -124,23 +170,31 @@ tbody tr:hover {
     border: none;
 }
 
-.amount-col { width: 150px; }
-.action-col { width: 100px; }
-
 /* --- Form Elements --- */
-input[type="text"], input[type="number"], select {
+input[type="text"], input[type="number"], input[type="date"], select {
     width: 100%;
     padding: 0.6rem;
     border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 0.9rem;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: white; /* Ensure inputs are not transparent */
 }
+input[readonly] {
+    background-color: #f1f1f1;
+    cursor: not-allowed;
+}
+
 
 input:focus, select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(74, 85, 225, 0.2);
+}
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
 }
 
 button {
