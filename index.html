@@ -20,104 +20,141 @@
                 <select id="importMonth">
                     <option value="">Select month to import from</option>
                 </select>
+                <button class="import-btn" onclick="importIncome()">Import Income</button>
+                <button class="import-btn" onclick="importBills()">Import Bills</button>
                 <button class="import-btn" onclick="importFixedExpenses()">Import Fixed</button>
                 <button class="import-btn" onclick="importSemiFixedExpenses()">Import Semi-Fixed</button>
-                <button class="import-btn" onclick="importBothExpenses()">Import Both</button>
             </div>
         </div>
 
-        <div class="extract-section">
-            <h2 class="section-title">📈 Budget Extract</h2>
-            <div class="extract-grid" id="extractGrid"></div>
+        <div class="tabs">
+            <button class="tab-link active" onclick="openTab(event, 'Plan')">🗓️ Plan</button>
+            <button class="tab-link" onclick="openTab(event, 'Expenses')">💸 Expenses</button>
+            <button class="tab-link" onclick="openTab(event, 'Extract')">📊 Budget Extract</button>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">💰 Income</h2>
-            <table id="incomeTable">
-                <thead>
-                    <tr><th>Source</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
-                </thead>
-                <tbody id="incomeBody"></tbody>
-                <tfoot>
-                    <tr><td colspan="3"><button onclick="addRow('incomeBody', 'income-amount')">+ Add Income</button></td></tr>
-                    <tr class="total-row"><td>TOTAL INCOME</td><td id="totalIncome">$0.00</td><td></td></tr>
-                </tfoot>
-            </table>
+        <div id="Plan" class="tab-content" style="display: block;">
+            <div class="section">
+                <h2 class="section-title">💰 Planned Income</h2>
+                <table>
+                    <thead>
+                        <tr><th>Source</th><th style="width: 150px;">Amount</th><th style="width: 120px;">Received <input type="checkbox" onchange="toggleAll(this, 'plannedIncomeBody')"></th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="plannedIncomeBody"></tbody>
+                    <tfoot>
+                        <tr><td colspan="4"><button onclick="addPlannedIncomeRow()">+ Add Planned Income</button></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🧾 Incoming Bills</h2>
+                <table>
+                    <thead>
+                        <tr><th>Bill</th><th style="width: 130px;">Amount</th><th style="width: 150px;">Due Date</th><th style="width: 180px;">Category</th><th style="width: 100px;">Paid <input type="checkbox" onchange="toggleAll(this, 'plannedBillsBody')"></th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="plannedBillsBody"></tbody>
+                    <tfoot>
+                        <tr><td colspan="6"><button onclick="addPlannedBillRow()">+ Add Bill</button></td></tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">🔒 Fixed Expenses</h2>
-            <table>
-                <thead>
-                    <tr><th>Expense</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
-                </thead>
-                <tbody id="fixedBody"></tbody>
-                <tfoot>
-                    <tr><td colspan="3"><button onclick="addRow('fixedBody', 'fixed-amount')">+ Add Fixed Expense</button></td></tr>
-                    <tr class="total-row"><td>TOTAL FIXED</td><td id="totalFixed">$0.00</td><td></td></tr>
-                </tfoot>
-            </table>
+        <div id="Expenses" class="tab-content">
+             <div class="section">
+                <h2 class="section-title">💰 Received Income</h2>
+                <table id="incomeTable">
+                    <thead>
+                        <tr><th>Source</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="incomeBody"></tbody>
+                    <tfoot>
+                        <tr class="total-row"><td>TOTAL RECEIVED</td><td id="totalIncome">$0.00</td><td></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">🔒 Fixed Expenses</h2>
+                <table>
+                    <thead>
+                        <tr><th>Expense</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="fixedBody"></tbody>
+                    <tfoot>
+                         <tr><td colspan="3"><button onclick="addRow('fixedBody', 'fixed-amount')">+ Add Fixed Expense</button></td></tr>
+                        <tr class="total-row"><td>TOTAL FIXED</td><td id="totalFixed">$0.00</td><td></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">📊 Semi-Fixed Expenses</h2>
+                <table>
+                    <thead>
+                        <tr><th>Expense</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="semiFixedBody"></tbody>
+                    <tfoot>
+                        <tr><td colspan="3"><button onclick="addRow('semiFixedBody', 'semifixed-amount')">+ Add Semi-Fixed Expense</button></td></tr>
+                        <tr class="total-row"><td>TOTAL SEMI-FIXED</td><td id="totalSemiFixed">$0.00</td><td></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">➕ Extra Expenses</h2>
+                <table>
+                    <thead>
+                        <tr><th>Expense</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="extraBody"></tbody>
+                    <tfoot>
+                        <tr><td colspan="3"><button onclick="addRow('extraBody', 'extra-amount')">+ Add Extra Expense</button></td></tr>
+                        <tr class="total-row"><td>TOTAL EXTRA</td><td id="totalExtra">$0.00</td><td></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+             <div class="section">
+                <h2 class="section-title">📅 Long-Lasting Expenses (Loans)</h2>
+                <table>
+                    <thead>
+                        <tr><th>Loan Name</th><th style="width: 130px;">Amount Left</th><th style="width: 130px;">Monthly Payment</th><th style="width: 110px;">Months Left</th><th style="width: 150px;">Increase Amount</th><th style="width: 100px;">Action</th></tr>
+                    </thead>
+                    <tbody id="loansBody"></tbody>
+                    <tfoot>
+                        <tr><td colspan="6"><button onclick="addLoanRow()">+ Add Loan</button></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        
+        <div id="Extract" class="tab-content">
+            <div class="extract-section">
+                <h2 class="section-title">📈 Budget Extract</h2>
+                <div class="extract-grid" id="extractGrid"></div>
+            </div>
+    
+            <div class="section">
+                <h2 class="section-title">💳 Total Expenses</h2>
+                <table>
+                    <tbody>
+                        <tr class="total-row"><td>TOTAL EXPENSES</td><td id="totalExpenses">$0.00</td><td></td></tr>
+                    </tbody>
+                </table>
+            </div>
+    
+            <div class="balance-section">
+                <h2>Final Balance</h2>
+                <div class="balance-amount" id="finalBalance">$0.00</div>
+            </div>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">📊 Semi-Fixed Expenses</h2>
-            <table>
-                <thead>
-                    <tr><th>Expense</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
-                </thead>
-                <tbody id="semiFixedBody"></tbody>
-                <tfoot>
-                    <tr><td colspan="3"><button onclick="addRow('semiFixedBody', 'semifixed-amount')">+ Add Semi-Fixed Expense</button></td></tr>
-                    <tr class="total-row"><td>TOTAL SEMI-FIXED</td><td id="totalSemiFixed">$0.00</td><td></td></tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">➕ Extra Expenses</h2>
-            <table>
-                <thead>
-                    <tr><th>Expense</th><th style="width: 150px;">Amount</th><th style="width: 100px;">Action</th></tr>
-                </thead>
-                <tbody id="extraBody"></tbody>
-                <tfoot>
-                    <tr><td colspan="3"><button onclick="addRow('extraBody', 'extra-amount')">+ Add Extra Expense</button></td></tr>
-                    <tr class="total-row"><td>TOTAL EXTRA</td><td id="totalExtra">$0.00</td><td></td></tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">💳 Total Expenses</h2>
-            <table>
-                <tbody>
-                    <tr class="total-row"><td>TOTAL EXPENSES</td><td id="totalExpenses">$0.00</td><td></td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">📅 Long-Lasting Expenses (Loans)</h2>
-            <table>
-                <thead>
-                    <tr><th>Loan Name</th><th style="width: 130px;">Amount Left</th><th style="width: 130px;">Monthly Payment</th><th style="width: 110px;">Months Left</th><th style="width: 150px;">Increase Amount</th><th style="width: 100px;">Action</th></tr>
-                </thead>
-                <tbody id="loansBody"></tbody>
-                <tfoot>
-                    <tr><td colspan="6"><button onclick="addLoanRow()">+ Add Loan</button></td></tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="balance-section">
-            <h2>Final Balance</h2>
-            <div class="balance-amount" id="finalBalance">$0.00</div>
-        </div>
     </div>
     
     <script type="module">
     // --- Firebase Configuration Injection ---
-    // Define the global configuration variables using your provided credentials
     const FIREBASE_CONFIG = {
         apiKey: "AIzaSyBBldcELdbWroTVAoy5L1kw0_urUFfxMSc",
         authDomain: "finances-c7df4.firebaseapp.com",
@@ -128,77 +165,57 @@
         measurementId: "G-FEKN3WMBFS"
     };
     const APP_ID = FIREBASE_CONFIG.appId;
-
-    // Overwrite the placeholder variables
     const __firebase_config = JSON.stringify(FIREBASE_CONFIG);
     const __app_id = APP_ID;
-    
-    // **NEW:** Define a static, shared ID for everyone to use.
-    // Use this ID as the 'user' identifier in Firestore.
-    // This string must match the one you use in the Firestore Security Rules (Step 2).
     const SHARED_DOCUMENT_ID = "Budget_Global_Shared_Master"; 
 
     // --- Firebase SDK Imports ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // We keep 'getFirestore' but remove 'getAuth' and 'signInAnonymously' imports since we skip Auth.
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Global State and Firebase Variables ---
     let budgets = {};
     let currentMonth = '';
     let saveTimeout = null;
-
-    let db; // No need for 'auth'
-    let userId; // Will be set to SHARED_DOCUMENT_ID
-    let isAuthReady = false; // Flag to indicate that the system is ready to load data
+    let db;
+    let userId;
+    let isAuthReady = false;
 
     // --- Firebase Initialization ---
     async function initializeFirebase() {
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-
         if (!firebaseConfig.apiKey) {
             document.body.innerHTML = '<h1>Error: Firebase configuration is missing.</h1>';
             return;
         }
-
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
-
-        // **CRITICAL CHANGE: SKIP AUTH & SET FIXED ID**
         userId = SHARED_DOCUMENT_ID;
         isAuthReady = true;
-        console.log("Using Shared Document ID:", userId);
-
-        await initApp(); // Initialize the main application logic immediately
+        await initApp();
     }
 
     // --- Application Initialization ---
     async function initApp() {
         if (!isAuthReady) return; 
-        
         const now = new Date();
         currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('month').value = currentMonth;
-
-        await loadBudgetsFromFirestore(); // Load data from Firestore
+        await loadBudgetsFromFirestore();
         loadCurrentMonthUI();
         attachListeners();
     }
 
     // --- Firebase Persistence ---
-
-    // Load all budgets from Firestore
     async function loadBudgetsFromFirestore() {
         if (!userId) return;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // **UPDATED PATH:** The document path now uses the fixed SHARED_DOCUMENT_ID.
-        // Path: artifacts/{appId}/users/Budget_Global_Shared_Master/budgets/allData
         const docRef = doc(db, `artifacts/${appId}/users/${userId}/budgets/allData`);
         try {
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                budgets = docSnap.data().data || docSnap.data() || {};
+                budgets = docSnap.data() || {};
                 console.log("Budgets loaded from Firestore.");
             } else {
                 console.log("No existing budget document. Starting fresh.");
@@ -211,331 +228,510 @@
         updateImportMonthOptions();
     }
 
-    // Save all budgets to Firestore
     async function saveBudgetsToFirestore() {
         if (!userId) return;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // **UPDATED PATH:** Uses the fixed SHARED_DOCUMENT_ID.
         const docRef = doc(db, `artifacts/${appId}/users/${userId}/budgets/allData`);
         try {
-            await setDoc(docRef, budgets); 
+            await setDoc(docRef, { ...budgets }); // Use spread to ensure it's a new object
             console.log("Budgets saved to Firestore.");
         } catch (error) {
             console.error("Error saving budgets to Firestore:", error);
         }
     }
 
-        // --- Auto-Save Functionality ---
+    // --- Auto-Save Functionality ---
+    function autoSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            saveCurrentMonth();
+            showSaveIndicator();
+        }, 1000);
+    }
 
-        function autoSave() {
-            if (saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveCurrentMonth();
-                showSaveIndicator();
-            }, 1000);
+    function showSaveIndicator() {
+        const indicator = document.getElementById('saveIndicator');
+        indicator.style.display = 'inline-block';
+        setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+    }
+
+    // --- Core Data Handling ---
+    function saveCurrentMonth() {
+        const data = {
+            plannedIncome: extractPlannedIncomeData(),
+            plannedBills: extractPlannedBillsData(),
+            income: extractTableData('incomeBody'),
+            fixed: extractTableData('fixedBody'),
+            semFixed: extractTableData('semiFixedBody'),
+            extra: extractTableData('extraBody'),
+            loans: extractLoanData()
+        };
+        
+        const hasData = Object.values(data).some(arr => arr.length > 0 && arr.some(item => Object.values(item).some(val => val)));
+
+        if (hasData) {
+            budgets[currentMonth] = data;
+        } else if (budgets[currentMonth]) {
+            delete budgets[currentMonth];
         }
+        saveBudgetsToFirestore();
+        updateImportMonthOptions();
+    }
+    
+    function extractPlannedIncomeData() {
+        const rows = [];
+        document.querySelectorAll('#plannedIncomeBody tr').forEach(row => {
+            const descInput = row.querySelector('input[type="text"]');
+            const amountInput = row.querySelector('input[type="number"]');
+            const receivedCheckbox = row.querySelector('input[type="checkbox"]');
+            rows.push({ 
+                description: descInput.value, 
+                amount: parseFloat(amountInput.value) || 0,
+                received: receivedCheckbox.checked,
+                id: row.dataset.id
+            });
+        });
+        return rows;
+    }
+    
+    function extractPlannedBillsData() {
+        const rows = [];
+        document.querySelectorAll('#plannedBillsBody tr').forEach(row => {
+            const descInput = row.querySelector('input[type="text"]');
+            const amountInput = row.querySelector('.bill-amount');
+            const dateInput = row.querySelector('input[type="date"]');
+            const categorySelect = row.querySelector('select');
+            const paidCheckbox = row.querySelector('input[type="checkbox"]');
+            rows.push({ 
+                description: descInput.value, 
+                amount: parseFloat(amountInput.value) || 0,
+                dueDate: dateInput.value,
+                category: categorySelect.value,
+                paid: paidCheckbox.checked,
+                id: row.dataset.id
+            });
+        });
+        return rows;
+    }
 
-        function showSaveIndicator() {
-            const indicator = document.getElementById('saveIndicator');
-            indicator.style.display = 'inline-block';
-            setTimeout(() => {
-                indicator.style.display = 'none';
-            }, 2000);
-        }
-
-        // --- Core Data Handling ---
-
-        function saveCurrentMonth() {
-            const data = {
-                income: extractTableData('incomeBody'),
-                fixed: extractTableData('fixedBody'),
-                semFixed: extractTableData('semiFixedBody'),
-                extra: extractTableData('extraBody'),
-                loans: extractLoanData()
-            };
-            
-            const hasData = data.income.some(i => i.description || i.amount) || 
-                            data.fixed.some(i => i.description || i.amount) ||
-                            data.semFixed.some(i => i.description || i.amount) ||
-                            data.extra.some(i => i.description || i.amount) ||
-                            data.loans.some(i => i.name || i.amountLeft || i.monthlyPayment);
-
-            if (hasData) {
-                budgets[currentMonth] = data;
-            } else if (budgets[currentMonth]) {
-                // If there's no data but an entry exists, delete it
-                delete budgets[currentMonth];
-            }
-            saveBudgetsToFirestore(); // Call the Firestore save function
-            updateImportMonthOptions();
-        }
-
-        function extractTableData(bodyId) {
-            const rows = [];
-            document.querySelectorAll(`#${bodyId} tr`).forEach(row => {
+    function extractTableData(bodyId) {
+        const rows = [];
+        document.querySelectorAll(`#${bodyId} tr`).forEach(row => {
+            const isManual = !row.dataset.sourceId; // Check if it's a manually added row
+            if (isManual) {
                 const descInput = row.querySelector('input[type="text"]');
                 const amountInput = row.querySelector('input[type="number"]');
-
-                const desc = descInput ? descInput.value : '';
-                const amount = parseFloat(amountInput ? amountInput.value : '0') || 0;
-                
-                rows.push({ description: desc, amount: amount });
-            });
-            return rows;
-        }
-
-        function extractLoanData() {
-            const loans = [];
-            document.querySelectorAll('#loansBody tr').forEach(row => {
-                const nameInput = row.querySelector('input[type="text"]');
-                const leftInput = row.querySelector('.loan-left');
-                const monthlyInput = row.querySelector('.loan-monthly');
-                
-                const name = nameInput ? nameInput.value : '';
-                const left = parseFloat(leftInput ? leftInput.value : '0') || 0;
-                const monthly = parseFloat(monthlyInput ? monthlyInput.value : '0') || 0;
-                
-                loans.push({ name, amountLeft: left, monthlyPayment: monthly });
-            });
-            return loans;
-        }
-
-        // --- UI Population and Updates ---
-
-        function loadCurrentMonthUI() {
-            const data = budgets[currentMonth];
-            clearTable('incomeBody');
-            clearTable('fixedBody');
-            clearTable('semiFixedBody');
-            clearTable('extraBody');
-            clearTable('loansBody');
-            loadTableData('incomeBody', 'income-amount', data ? data.income : []);
-            loadTableData('fixedBody', 'fixed-amount', data ? data.fixed : []);
-            loadTableData('semiFixedBody', 'semifixed-amount', data ? data.semFixed : []);
-            loadTableData('extraBody', 'extra-amount', data ? data.extra : []);
-            loadLoanData(data ? data.loans : []);
-            calculate();
-        }
-        
-        function clearTable(bodyId) {
-            document.getElementById(bodyId).innerHTML = '';
-        }
-
-        function loadTableData(bodyId, className, data) {
-            const tbody = document.getElementById(bodyId);
-            const dataToLoad = data && data.length > 0 ? data : [{ description: '', amount: '' }]; // Load at least one empty row
-
-            dataToLoad.forEach(item => {
-                const row = tbody.insertRow();
-                // Ensure inputs have values and are escaped for safety, though for this app, simplicity is fine
-                const descValue = item.description || '';
-                const amountValue = item.amount !== undefined && item.amount !== null ? item.amount : '';
-
-                row.innerHTML = `
-                    <td><input type="text" placeholder="Description" value="${descValue}"></td>
-                    <td><input type="number" step="0.01" placeholder="0.00" class="${className}" value="${amountValue}"></td>
-                    <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
-                `;
-                attachListenersToRow(row);
-            });
-            
-            // If the initial data was empty and we added one empty row, we are good.
-        }
-        
-        function loadLoanData(loans) {
-            const tbody = document.getElementById('loansBody');
-            const dataToLoad = loans && loans.length > 0 ? loans : [{ name: '', amountLeft: '', monthlyPayment: '' }]; // Load at least one empty row
-
-            dataToLoad.forEach(loan => {
-                const monthsLeft = (loan.monthlyPayment > 0 && loan.amountLeft !== null && loan.amountLeft !== undefined) ? Math.ceil(loan.amountLeft / loan.monthlyPayment) : 0;
-                
-                const nameValue = loan.name || '';
-                const leftValue = loan.amountLeft !== undefined && loan.amountLeft !== null ? loan.amountLeft : '';
-                const monthlyValue = loan.monthlyPayment !== undefined && loan.monthlyPayment !== null ? loan.monthlyPayment : '';
-
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td><input type="text" placeholder="Loan Name" value="${nameValue}"></td>
-                    <td><input type="number" step="0.01" placeholder="0.00" class="loan-left" value="${leftValue}"></td>
-                    <td><input type="number" step="0.01" placeholder="0.00" class="loan-monthly" value="${monthlyValue}"></td>
-                    <td><input type="number" placeholder="0" class="loan-months" readonly value="${monthsLeft}"></td>
-                    <td><div class="loan-increase-controls"><input type="number" step="0.01" placeholder="0.00" class="loan-increase-input"><button class="increase-btn" onclick="increaseLoan(this)">+</button></div></td>
-                    <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
-                `;
-                attachListenersToRow(row);
-            });
-        }
-        
-        // Make functions globally accessible for inline event handlers
-        window.addRow = function(bodyId, className) {
-            const tbody = document.getElementById(bodyId);
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td><input type="text" placeholder="Description"></td>
-                <td><input type="number" step="0.01" placeholder="0.00" class="${className}"></td>
-                <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
-            `;
-            attachListenersToRow(row);
-        }
-
-        window.addLoanRow = function() {
-            const tbody = document.getElementById('loansBody');
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td><input type="text" placeholder="Loan Name"></td>
-                <td><input type="number" step="0.01" placeholder="0.00" class="loan-left"></td>
-                <td><input type="number" step="0.01" placeholder="0.00" class="loan-monthly"></td>
-                <td><input type="number" placeholder="0" class="loan-months" readonly></td>
-                <td><div class="loan-increase-controls"><input type="number" step="0.01" placeholder="0.00" class="loan-increase-input"><button class="increase-btn" onclick="increaseLoan(this)">+</button></div></td>
-                <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
-            `;
-            attachListenersToRow(row);
-        }
-
-        window.deleteRow = function(btn) {
-            btn.closest('tr').remove();
-            calculate();
-            autoSave();
-        }
-
-        function calculate() {
-            const totalIncome = Array.from(document.querySelectorAll('.income-amount')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-            const totalFixed = Array.from(document.querySelectorAll('.fixed-amount')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-            const totalSemiFixed = Array.from(document.querySelectorAll('.semifixed-amount')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-            const totalExtra = Array.from(document.querySelectorAll('.extra-amount')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-
-            document.getElementById('totalIncome').textContent = '$' + totalIncome.toFixed(2);
-            document.getElementById('totalFixed').textContent = '$' + totalFixed.toFixed(2);
-            document.getElementById('totalSemiFixed').textContent = '$' + totalSemiFixed.toFixed(2);
-            document.getElementById('totalExtra').textContent = '$' + totalExtra.toFixed(2);
-
-            document.querySelectorAll('#loansBody tr').forEach(row => {
-                const amountLeft = parseFloat(row.querySelector('.loan-left').value) || 0;
-                const monthlyPayment = parseFloat(row.querySelector('.loan-monthly').value) || 0;
-                // Calculate and update Months Left
-                row.querySelector('.loan-months').value = monthlyPayment > 0 ? Math.ceil(amountLeft / monthlyPayment) : 0;
-            });
-            
-            const totalExpenses = totalFixed + totalSemiFixed + totalExtra;
-            const balance = totalIncome - totalExpenses;
-            const balanceEl = document.getElementById('finalBalance');
-            
-            document.getElementById('totalExpenses').textContent = '$' + totalExpenses.toFixed(2);
-            balanceEl.textContent = '$' + balance.toFixed(2);
-            balanceEl.className = 'balance-amount';
-            balanceEl.classList.add(balance >= 0 ? 'positive' : 'negative');
-
-            updateExtract();
-        }
-        
-        function updateImportMonthOptions() {
-            const select = document.getElementById('importMonth');
-            select.innerHTML = '<option value="">Select month to import from</option>';
-            // Sort keys by month descending
-            Object.keys(budgets).sort().reverse().forEach(month => {
-                if (month !== currentMonth) {
-                    const option = document.createElement('option');
-                    option.value = month;
-                    option.textContent = month;
-                    select.appendChild(option);
-                }
-            });
-        }
-
-        window.importFixedExpenses = function() {
-            const selectedMonth = document.getElementById('importMonth').value;
-            if (!selectedMonth || !budgets[selectedMonth]) return;
-            clearTable('fixedBody');
-            // Re-use data loading logic
-            loadTableData('fixedBody', 'fixed-amount', budgets[selectedMonth].fixed);
-            calculate();
-            autoSave();
-        }
-
-        window.importSemiFixedExpenses = function() {
-            const selectedMonth = document.getElementById('importMonth').value;
-            if (!selectedMonth || !budgets[selectedMonth]) return;
-            clearTable('semiFixedBody');
-            // Re-use data loading logic
-            loadTableData('semiFixedBody', 'semifixed-amount', budgets[selectedMonth].semFixed);
-            calculate();
-            autoSave();
-        }
-
-        window.importBothExpenses = function() {
-            importFixedExpenses();
-            importSemiFixedExpenses();
-        }
-        
-        window.increaseLoan = function(btn) {
-            const row = btn.closest('tr');
-            const increaseInput = row.querySelector('.loan-increase-input');
-            const leftInput = row.querySelector('.loan-left');
-            const increaseAmount = parseFloat(increaseInput.value) || 0;
-            if (increaseAmount <= 0) return;
-            leftInput.value = ((parseFloat(leftInput.value) || 0) + increaseAmount).toFixed(2);
-            increaseInput.value = '';
-            calculate();
-            autoSave();
-        }
-
-        function updateExtract() {
-            const grid = document.getElementById('extractGrid');
-            grid.innerHTML = '';
-            const balanceText = document.getElementById('finalBalance').textContent;
-            addExtractItem(grid, 'Total Income', document.getElementById('totalIncome').textContent, '#2ecc71');
-            addExtractItem(grid, 'Fixed Expenses', document.getElementById('totalFixed').textContent, '#e74c3c');
-            addExtractItem(grid, 'Semi-Fixed Expenses', document.getElementById('totalSemiFixed').textContent, '#e67e22');
-            addExtractItem(grid, 'Total Extra Expenses', document.getElementById('totalExtra').textContent, '#f39c12');
-            addExtractItem(grid, 'Total Expenses', document.getElementById('totalExpenses').textContent, '#c0392b');
-            addExtractItem(grid, 'Final Balance', balanceText, balanceText.includes('-') ? '#e74c3c' : '#27ae60');
-        }
-
-        function addExtractItem(grid, title, amount, color) {
-            const item = document.createElement('div');
-            item.className = 'extract-item';
-            item.style.borderLeftColor = color;
-            item.innerHTML = `<h4>${title}</h4><div class="amount">${amount}</div>`;
-            grid.appendChild(item);
-        }
-
-        function attachListeners() {
-            const container = document.querySelector('.container');
-            container.addEventListener('input', (e) => {
-                if (e.target.matches('input[type="number"], input[type="text"]')) {
-                    calculate();
-                    autoSave();
-                }
-            });
-
-            document.getElementById('month').addEventListener('change', (e) => {
-                saveCurrentMonth();
-                currentMonth = e.target.value;
-                loadCurrentMonthUI();
-            });
-            
-            // Re-attach listeners for all existing input fields loaded by the UI logic
-            document.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
-                input.addEventListener('input', () => {
-                    calculate();
-                    autoSave();
+                rows.push({ 
+                    description: descInput ? descInput.value : '', 
+                    amount: parseFloat(amountInput ? amountInput.value : '0') || 0,
                 });
-            });
+            }
+        });
+        return rows;
+    }
+
+    function extractLoanData() {
+        const loans = [];
+        document.querySelectorAll('#loansBody tr').forEach(row => {
+            const name = row.querySelector('input[type="text"]').value;
+            const left = parseFloat(row.querySelector('.loan-left').value) || 0;
+            const monthly = parseFloat(row.querySelector('.loan-monthly').value) || 0;
+            loans.push({ name, amountLeft: left, monthlyPayment: monthly });
+        });
+        return loans;
+    }
+
+    // --- UI Population and Updates ---
+    function loadCurrentMonthUI() {
+        const data = budgets[currentMonth] || {};
+        clearAllTables();
+        
+        loadPlannedIncome(data.plannedIncome || []);
+        loadPlannedBills(data.plannedBills || []);
+        
+        // Load only manually-added items, as plan-based items are handled by rebuildActualsFromPlan
+        loadTableData('incomeBody', 'income-amount', data.income || []);
+        loadTableData('fixedBody', 'fixed-amount', data.fixed || []);
+        loadTableData('semiFixedBody', 'semifixed-amount', data.semFixed || []);
+        loadTableData('extraBody', 'extra-amount', data.extra || []);
+        loadLoanData(data.loans || []);
+        
+        rebuildActualsFromPlan();
+        
+        calculate();
+    }
+
+    function clearAllTables() {
+        ['plannedIncomeBody', 'plannedBillsBody', 'incomeBody', 'fixedBody', 'semiFixedBody', 'extraBody', 'loansBody'].forEach(clearTable);
+    }
+    
+    function clearTable(bodyId) {
+        document.getElementById(bodyId).innerHTML = '';
+    }
+    
+    function loadPlannedIncome(plannedIncomes) {
+        (plannedIncomes.length ? plannedIncomes : [{}]).forEach((item, index) => addPlannedIncomeRow(item, index));
+    }
+
+    function loadPlannedBills(plannedBills) {
+        (plannedBills.length ? plannedBills : [{}]).forEach((item, index) => addPlannedBillRow(item, index));
+    }
+    
+    function rebuildActualsFromPlan() {
+        const plannedIncome = budgets[currentMonth]?.plannedIncome || [];
+        plannedIncome.forEach(item => {
+            if (item.received) {
+                addActualRow('incomeBody', { description: item.description, amount: item.amount, sourceId: item.id });
+            }
+        });
+
+        const plannedBills = budgets[currentMonth]?.plannedBills || [];
+        plannedBills.forEach(item => {
+            if (item.paid) {
+                const targetTable = { 'fixed': 'fixedBody', 'semifixed': 'semiFixedBody', 'extra': 'extraBody' }[item.category];
+                if (targetTable) {
+                    addActualRow(targetTable, { description: item.description, amount: item.amount, sourceId: item.id });
+                }
+            }
+        });
+    }
+
+    function loadTableData(bodyId, className, data) {
+        (data && data.length > 0 ? data : []).forEach(item => {
+            if (!item.sourceId) {
+                 addRow(bodyId, className, item);
+            }
+        });
+    }
+    
+    function loadLoanData(loans) {
+        (loans && loans.length > 0 ? loans : [{}]).forEach(loan => addLoanRow(loan));
+    }
+
+    // --- Global Functions for UI Interaction ---
+    window.openTab = function(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    // NEW: Generic function to check/uncheck all items in a planning table
+    window.toggleAll = function(sourceCheckbox, bodyId) {
+        const tbody = document.getElementById(bodyId);
+        const checkboxes = tbody.querySelectorAll('input[type="checkbox"]');
+        
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked !== sourceCheckbox.checked) {
+                checkbox.checked = sourceCheckbox.checked;
+                // Simulate a change event to trigger the existing handler logic
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    window.addRow = function(bodyId, className, item = {}) {
+        const tbody = document.getElementById(bodyId);
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td><input type="text" placeholder="Description" value="${item.description || ''}"></td>
+            <td><input type="number" step="0.01" placeholder="0.00" class="${className}" value="${item.amount || ''}"></td>
+            <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
+        `;
+        attachListenersToRow(row);
+    }
+    
+    window.addPlannedIncomeRow = function(item = {}, index) {
+        const tbody = document.getElementById('plannedIncomeBody');
+        const row = tbody.insertRow();
+        const id = item.id || `income-${Date.now()}-${index}`; // More robust ID
+        row.dataset.id = id;
+        row.innerHTML = `
+            <td><input type="text" placeholder="Source" value="${item.description || ''}"></td>
+            <td><input type="number" step="0.01" placeholder="0.00" value="${item.amount || ''}"></td>
+            <td><input type="checkbox" onchange="handleIncomeReceived(this)" ${item.received ? 'checked' : ''}></td>
+            <td><button class="delete" onclick="deletePlannedRow(this, 'income')">Delete</button></td>
+        `;
+        if (item.received) row.classList.add('paid');
+        attachListenersToRow(row);
+    }
+
+    window.addPlannedBillRow = function(item = {}, index) {
+        const tbody = document.getElementById('plannedBillsBody');
+        const row = tbody.insertRow();
+        const id = item.id || `bill-${Date.now()}-${index}`; // More robust ID
+        row.dataset.id = id;
+        row.innerHTML = `
+            <td><input type="text" placeholder="Bill Name" value="${item.description || ''}"></td>
+            <td><input type="number" step="0.01" placeholder="0.00" class="bill-amount" value="${item.amount || ''}"></td>
+            <td><input type="date" value="${item.dueDate || ''}"></td>
+            <td>
+                <select>
+                    <option value="fixed" ${item.category === 'fixed' ? 'selected' : ''}>Fixed</option>
+                    <option value="semifixed" ${item.category === 'semifixed' ? 'selected' : ''}>Semi-Fixed</option>
+                    <option value="extra" ${item.category === 'extra' ? 'selected' : ''}>Extra</option>
+                </select>
+            </td>
+            <td><input type="checkbox" onchange="handlePayment(this)" ${item.paid ? 'checked' : ''}></td>
+            <td><button class="delete" onclick="deletePlannedRow(this, 'bill')">Delete</button></td>
+        `;
+        if (item.paid) row.classList.add('paid');
+        attachListenersToRow(row);
+    }
+    
+    function addActualRow(bodyId, item) {
+        // Prevent adding duplicates
+        if (document.querySelector(`#${bodyId} tr[data-source-id="${item.sourceId}"]`)) return;
+        const tbody = document.getElementById(bodyId);
+        const row = tbody.insertRow();
+        row.dataset.sourceId = item.sourceId; 
+        row.innerHTML = `
+            <td><input type="text" value="${item.description || ''}" readonly></td>
+            <td><input type="number" step="0.01" value="${item.amount || ''}" readonly></td>
+            <td></td>
+        `;
+    }
+
+    window.addLoanRow = function(loan = {}) {
+        const tbody = document.getElementById('loansBody');
+        const row = tbody.insertRow();
+        const monthsLeft = (loan.monthlyPayment > 0 && loan.amountLeft) ? Math.ceil(loan.amountLeft / loan.monthlyPayment) : 0;
+        row.innerHTML = `
+            <td><input type="text" placeholder="Loan Name" value="${loan.name || ''}"></td>
+            <td><input type="number" step="0.01" placeholder="0.00" class="loan-left" value="${loan.amountLeft || ''}"></td>
+            <td><input type="number" step="0.01" placeholder="0.00" class="loan-monthly" value="${loan.monthlyPayment || ''}"></td>
+            <td><input type="number" placeholder="0" class="loan-months" readonly value="${monthsLeft}"></td>
+            <td><div class="loan-increase-controls"><input type="number" step="0.01" placeholder="0.00" class="loan-increase-input"><button class="increase-btn" onclick="increaseLoan(this)">+</button></div></td>
+            <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
+        `;
+        attachListenersToRow(row);
+    }
+    
+    window.handleIncomeReceived = function(checkbox) {
+        const row = checkbox.closest('tr');
+        const id = row.dataset.id;
+        if (checkbox.checked) {
+            row.classList.add('paid');
+            const desc = row.querySelector('input[type="text"]').value;
+            const amount = row.querySelector('input[type="number"]').value;
+            addActualRow('incomeBody', { description: desc, amount: amount, sourceId: id });
+        } else {
+            row.classList.remove('paid');
+            const existingRow = document.querySelector(`#incomeBody tr[data-source-id="${id}"]`);
+            if (existingRow) existingRow.remove();
+        }
+        calculate();
+        autoSave();
+    }
+
+    window.handlePayment = function(checkbox) {
+        const row = checkbox.closest('tr');
+        const id = row.dataset.id;
+        const category = row.querySelector('select').value;
+        const targetTable = { 'fixed': 'fixedBody', 'semifixed': 'semiFixedBody', 'extra': 'extraBody' }[category];
+        
+        if (!targetTable) return;
+
+        if (checkbox.checked) {
+            row.classList.add('paid');
+            const desc = row.querySelector('input[type="text"]').value;
+            const amount = row.querySelector('.bill-amount').value;
+            addActualRow(targetTable, { description: desc, amount: amount, sourceId: id });
+        } else {
+            row.classList.remove('paid');
+            const existingRow = document.querySelector(`#${targetTable} tr[data-source-id="${id}"]`);
+            if (existingRow) existingRow.remove();
+        }
+        calculate();
+        autoSave();
+    }
+    
+    window.deleteRow = function(btn) {
+        btn.closest('tr').remove();
+        calculate();
+        autoSave();
+    }
+    
+    window.deletePlannedRow = function(btn, type) {
+        const row = btn.closest('tr');
+        const id = row.dataset.id;
+        let correspondingRow;
+
+        if (type === 'bill') {
+            correspondingRow = document.querySelector(`#fixedBody tr[data-source-id="${id}"], #semiFixedBody tr[data-source-id="${id}"], #extraBody tr[data-source-id="${id}"]`);
+        } else if (type === 'income') {
+            correspondingRow = document.querySelector(`#incomeBody tr[data-source-id="${id}"]`);
         }
         
-        function attachListenersToRow(row) {
-            row.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
-                input.addEventListener('input', () => {
-                    calculate();
-                    autoSave();
-                });
+        if (correspondingRow) correspondingRow.remove();
+        row.remove();
+        calculate();
+        autoSave();
+    }
+
+    function calculate() {
+        const totalIncome = Array.from(document.querySelectorAll('#incomeBody input[type="number"]')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+        const totalFixed = Array.from(document.querySelectorAll('#fixedBody input[type="number"]')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+        const totalSemiFixed = Array.from(document.querySelectorAll('#semiFixedBody input[type="number"]')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+        const totalExtra = Array.from(document.querySelectorAll('#extraBody input[type="number"]')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+
+        document.getElementById('totalIncome').textContent = '$' + totalIncome.toFixed(2);
+        document.getElementById('totalFixed').textContent = '$' + totalFixed.toFixed(2);
+        document.getElementById('totalSemiFixed').textContent = '$' + totalSemiFixed.toFixed(2);
+        document.getElementById('totalExtra').textContent = '$' + totalExtra.toFixed(2);
+
+        document.querySelectorAll('#loansBody tr').forEach(row => {
+            const amountLeft = parseFloat(row.querySelector('.loan-left').value) || 0;
+            const monthlyPayment = parseFloat(row.querySelector('.loan-monthly').value) || 0;
+            row.querySelector('.loan-months').value = monthlyPayment > 0 ? Math.ceil(amountLeft / monthlyPayment) : 0;
+        });
+        
+        const totalExpenses = totalFixed + totalSemiFixed + totalExtra;
+        const balance = totalIncome - totalExpenses;
+        const balanceEl = document.getElementById('finalBalance');
+        
+        document.getElementById('totalExpenses').textContent = '$' + totalExpenses.toFixed(2);
+        balanceEl.textContent = '$' + balance.toFixed(2);
+        balanceEl.className = 'balance-amount';
+        balanceEl.classList.add(balance >= 0 ? 'positive' : 'negative');
+
+        updateExtract();
+    }
+    
+    // --- Import/Export and Listeners ---
+    function updateImportMonthOptions() {
+        const select = document.getElementById('importMonth');
+        select.innerHTML = '<option value="">Select month to import from</option>';
+        Object.keys(budgets).sort().reverse().forEach(month => {
+            if (month !== currentMonth) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                select.appendChild(option);
+            }
+        });
+    }
+    
+    // REVISED: Import functions now update the state and reload the entire UI
+    window.importIncome = function() {
+        const selectedMonth = document.getElementById('importMonth').value;
+        if (!selectedMonth || !budgets[selectedMonth]) return;
+
+        if (!budgets[currentMonth]) budgets[currentMonth] = {};
+
+        // Deep copy to prevent reference issues
+        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].plannedIncome || []));
+        budgets[currentMonth].plannedIncome = importedData;
+        
+        loadCurrentMonthUI(); // Reload UI from the new state
+        autoSave();
+    }
+    
+    window.importBills = function() {
+        const selectedMonth = document.getElementById('importMonth').value;
+        if (!selectedMonth || !budgets[selectedMonth]) return;
+
+        if (!budgets[currentMonth]) budgets[currentMonth] = {};
+        
+        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].plannedBills || []));
+        budgets[currentMonth].plannedBills = importedData;
+        
+        loadCurrentMonthUI();
+        autoSave();
+    }
+
+    window.importFixedExpenses = function() {
+        const selectedMonth = document.getElementById('importMonth').value;
+        if (!selectedMonth || !budgets[selectedMonth]) return;
+
+        if (!budgets[currentMonth]) budgets[currentMonth] = {};
+
+        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].fixed || []));
+        budgets[currentMonth].fixed = importedData;
+
+        loadCurrentMonthUI();
+        autoSave();
+    }
+
+    window.importSemiFixedExpenses = function() {
+        const selectedMonth = document.getElementById('importMonth').value;
+        if (!selectedMonth || !budgets[selectedMonth]) return;
+
+        if (!budgets[currentMonth]) budgets[currentMonth] = {};
+
+        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].semFixed || []));
+        budgets[currentMonth].semFixed = importedData;
+
+        loadCurrentMonthUI();
+        autoSave();
+    }
+    
+    window.increaseLoan = function(btn) {
+        const row = btn.closest('tr');
+        const increaseInput = row.querySelector('.loan-increase-input');
+        const leftInput = row.querySelector('.loan-left');
+        const increaseAmount = parseFloat(increaseInput.value) || 0;
+        if (increaseAmount <= 0) return;
+        leftInput.value = ((parseFloat(leftInput.value) || 0) + increaseAmount).toFixed(2);
+        increaseInput.value = '';
+        calculate();
+        autoSave();
+    }
+
+    function updateExtract() {
+        const grid = document.getElementById('extractGrid');
+        grid.innerHTML = '';
+        const balanceText = document.getElementById('finalBalance').textContent;
+        addExtractItem(grid, 'Total Received Income', document.getElementById('totalIncome').textContent, '#2ecc71');
+        addExtractItem(grid, 'Fixed Expenses', document.getElementById('totalFixed').textContent, '#e74c3c');
+        addExtractItem(grid, 'Semi-Fixed Expenses', document.getElementById('totalSemiFixed').textContent, '#e67e22');
+        addExtractItem(grid, 'Total Extra Expenses', document.getElementById('totalExtra').textContent, '#f39c12');
+        addExtractItem(grid, 'Total Expenses', document.getElementById('totalExpenses').textContent, '#c0392b');
+        addExtractItem(grid, 'Final Balance', balanceText, balanceText.includes('-') ? '#e74c3c' : '#27ae60');
+    }
+
+    function addExtractItem(grid, title, amount, color) {
+        const item = document.createElement('div');
+        item.className = 'extract-item';
+        item.style.borderLeftColor = color;
+        item.innerHTML = `<h4>${title}</h4><div class="amount">${amount}</div>`;
+        grid.appendChild(item);
+    }
+
+    function attachListeners() {
+        const container = document.querySelector('.container');
+        container.addEventListener('input', (e) => {
+            if (e.target.matches('input, select')) {
+                calculate();
+                autoSave();
+            }
+        });
+
+        document.getElementById('month').addEventListener('change', (e) => {
+            saveCurrentMonth();
+            currentMonth = e.target.value;
+            loadCurrentMonthUI();
+        });
+    }
+    
+    function attachListenersToRow(row) {
+        row.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('input', () => {
+                calculate();
+                autoSave();
             });
-        }
+        });
+    }
 
-
-        // --- App Start ---
-        // Start the process by initializing Firebase
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
+    // --- App Start ---
+    document.addEventListener('DOMContentLoaded', initializeFirebase);
     </script>
 </body>
 </html>
