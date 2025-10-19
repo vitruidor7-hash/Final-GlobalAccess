@@ -73,7 +73,7 @@ h1 {
     font-weight: 500;
 }
 
-/* --- NEW: Tab System --- */
+/* --- Tab Systems --- */
 .tabs {
     display: flex;
     border-bottom: 2px solid var(--border-color);
@@ -106,6 +106,37 @@ h1 {
     display: none; /* Hidden by default */
 }
 
+/* Sub-tab styling */
+.subsection-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.sub-tab-link {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    border-radius: 6px 6px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    position: relative;
+    top: 1px;
+}
+.sub-tab-link.active {
+    background: var(--background-white);
+    color: var(--primary-color);
+    font-weight: 500;
+    border-color: var(--border-color);
+}
+.sub-tab-content {
+    display: none;
+}
+
+
 /* --- Section & Card Styling --- */
 .section, .extract-section {
     margin-bottom: 2rem;
@@ -114,6 +145,11 @@ h1 {
     padding: 1.5rem;
     background: var(--background-white);
 }
+.section .section-title { /* Don't add double border to nested titles */
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
 
 .section-title {
     font-size: 1.25rem;
@@ -148,7 +184,6 @@ tbody tr:hover {
     background-color: #fcfcfc;
 }
 
-/* NEW: Style for paid/received rows */
 tbody tr.paid {
     background-color: #f0fdf4; /* Light green background */
 }
@@ -183,6 +218,12 @@ input[type="text"], input[type="number"], input[type="date"], select {
 input[readonly] {
     background-color: #f1f1f1;
     cursor: not-allowed;
+    color: var(--text-light);
+}
+select[disabled], input[type="checkbox"]:disabled {
+    background-color: #f1f1f1;
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 
@@ -195,6 +236,7 @@ input[type="checkbox"] {
     width: 20px;
     height: 20px;
     cursor: pointer;
+    vertical-align: middle;
 }
 
 button {
@@ -221,7 +263,7 @@ button.delete { background: var(--red); }
 button.delete:hover { background: #c0392b; }
 
 button.import-btn { background: var(--green); }
-button.import-btn:hover { background: #229954; }
+button.import-btn:hover { background: #229554; }
 
 button.increase-btn {
     background: var(--orange);
@@ -229,6 +271,90 @@ button.increase-btn {
     font-size: 0.8rem;
 }
 button.increase-btn:hover { background: #e67e22; }
+
+/* --- Credit Card Section --- */
+.credit-card-section {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: #fdfdff;
+}
+.credit-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+.credit-card-header > input.credit-card-name {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.credit-card-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    margin-left: auto;
+}
+
+.credit-card-total-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.credit-card-total-display label {
+    font-weight: 500;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+.credit-card-total-display input {
+    font-weight: 500;
+    font-size: 0.9rem;
+    width: 130px; /* Match monthly pay column */
+    background-color: var(--background-light);
+    border: 1px solid var(--border-color);
+    text-align: left;
+    padding: 0.6rem;
+}
+
+.card-paid-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.card-paid-control label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.installments-input {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.installments-input input {
+    text-align: center;
+}
+.installments-input span {
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.finish-payment-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+}
+.finish-payment-control label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
 
 /* --- Special Sections --- */
 .loan-increase-controls {
@@ -313,3 +439,4 @@ button.increase-btn:hover { background: #e67e22; }
         white-space: nowrap;
     }
 }
+
