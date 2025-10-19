@@ -48,16 +48,29 @@
             </div>
 
             <div class="section">
-                <h2 class="section-title">🧾 Incoming Bills</h2>
-                <table>
-                    <thead>
-                        <tr><th>Bill</th><th style="width: 130px;">Amount</th><th style="width: 150px;">Due Date</th><th style="width: 180px;">Category</th><th style="width: 100px;">Paid <input type="checkbox" onchange="toggleAll(this, 'plannedBillsBody')"></th><th style="width: 100px;">Action</th></tr>
-                    </thead>
-                    <tbody id="plannedBillsBody"></tbody>
-                    <tfoot>
-                        <tr><td colspan="6"><button onclick="addPlannedBillRow()">+ Add Bill</button></td></tr>
-                    </tfoot>
-                </table>
+                 <div class="subsection-tabs">
+                    <button class="sub-tab-link active" onclick="openSubTab(event, 'RegularBills')">🧾 Incoming Bills</button>
+                    <button class="sub-tab-link" onclick="openSubTab(event, 'CreditCards')">💳 Credit Cards</button>
+                </div>
+
+                <div id="RegularBills" class="sub-tab-content" style="display: block;">
+                    <h2 class="section-title">🧾 Incoming Bills</h2>
+                    <table>
+                        <thead>
+                            <tr><th>Bill</th><th style="width: 130px;">Amount</th><th style="width: 150px;">Due Date</th><th style="width: 180px;">Category</th><th style="width: 100px;">Paid <input type="checkbox" onchange="toggleAll(this, 'plannedBillsBody')"></th><th style="width: 100px;">Action</th></tr>
+                        </thead>
+                        <tbody id="plannedBillsBody"></tbody>
+                        <tfoot>
+                            <tr><td colspan="6"><button onclick="addPlannedBillRow()">+ Add Bill</button></td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div id="CreditCards" class="sub-tab-content" style="display: none;">
+                    <h2 class="section-title">💳 Credit Card Purchases</h2>
+                    <div id="creditCardContainer"></div>
+                    <button onclick="addCreditCardAccount()">+ Add Credit Card Account</button>
+                </div>
             </div>
         </div>
 
@@ -233,7 +246,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const docRef = doc(db, `artifacts/${appId}/users/${userId}/budgets/allData`);
         try {
-            await setDoc(docRef, { ...budgets }); // Use spread to ensure it's a new object
+            await setDoc(docRef, budgets);
             console.log("Budgets saved to Firestore.");
         } catch (error) {
             console.error("Error saving budgets to Firestore:", error);
@@ -257,9 +270,12 @@
 
     // --- Core Data Handling ---
     function saveCurrentMonth() {
+        if (!budgets[currentMonth]) budgets[currentMonth] = {};
+
         const data = {
             plannedIncome: extractPlannedIncomeData(),
             plannedBills: extractPlannedBillsData(),
+            creditCards: extractCreditCardData(),
             income: extractTableData('incomeBody'),
             fixed: extractTableData('fixedBody'),
             semFixed: extractTableData('semiFixedBody'),
@@ -267,89 +283,89 @@
             loans: extractLoanData()
         };
         
-        const hasData = Object.values(data).some(arr => arr.length > 0 && arr.some(item => Object.values(item).some(val => val)));
+        budgets[currentMonth] = data;
 
-        if (hasData) {
-            budgets[currentMonth] = data;
-        } else if (budgets[currentMonth]) {
+        const hasData = Object.values(data).some(arr => arr && arr.length > 0 && arr.some(item => Object.values(item).some(val => val)));
+        if (!hasData) {
             delete budgets[currentMonth];
         }
+
         saveBudgetsToFirestore();
         updateImportMonthOptions();
     }
     
     function extractPlannedIncomeData() {
-        const rows = [];
-        document.querySelectorAll('#plannedIncomeBody tr').forEach(row => {
-            const descInput = row.querySelector('input[type="text"]');
-            const amountInput = row.querySelector('input[type="number"]');
-            const receivedCheckbox = row.querySelector('input[type="checkbox"]');
-            rows.push({ 
-                description: descInput.value, 
-                amount: parseFloat(amountInput.value) || 0,
-                received: receivedCheckbox.checked,
-                id: row.dataset.id
-            });
-        });
-        return rows;
+        return Array.from(document.querySelectorAll('#plannedIncomeBody tr')).map(row => ({
+            description: row.querySelector('input[type="text"]').value,
+            amount: parseFloat(row.querySelector('input[type="number"]').value) || 0,
+            received: row.querySelector('input[type="checkbox"]').checked,
+            id: row.dataset.id
+        }));
     }
     
     function extractPlannedBillsData() {
-        const rows = [];
-        document.querySelectorAll('#plannedBillsBody tr').forEach(row => {
-            const descInput = row.querySelector('input[type="text"]');
-            const amountInput = row.querySelector('.bill-amount');
-            const dateInput = row.querySelector('input[type="date"]');
-            const categorySelect = row.querySelector('select');
-            const paidCheckbox = row.querySelector('input[type="checkbox"]');
-            rows.push({ 
-                description: descInput.value, 
-                amount: parseFloat(amountInput.value) || 0,
-                dueDate: dateInput.value,
-                category: categorySelect.value,
-                paid: paidCheckbox.checked,
-                id: row.dataset.id
-            });
+        return Array.from(document.querySelectorAll('#plannedBillsBody tr')).filter(row => row.dataset.source !== 'credit-card').map(row => ({
+            description: row.querySelector('input[type="text"]').value,
+            amount: parseFloat(row.querySelector('.bill-amount').value) || 0,
+            dueDate: row.querySelector('input[type="date"]').value,
+            category: row.querySelector('select').value,
+            paid: row.querySelector('input[type="checkbox"]').checked,
+            id: row.dataset.id
+        }));
+    }
+    
+    function extractCreditCardData() {
+        return Array.from(document.querySelectorAll('.credit-card-section')).map(cardSection => {
+            const cardId = cardSection.dataset.cardId;
+            return {
+                id: cardId,
+                name: cardSection.querySelector('.credit-card-name').value,
+                billPaidThisMonth: cardSection.querySelector('.card-paid-checkbox').checked,
+                purchases: Array.from(cardSection.querySelectorAll('.purchase-row')).map(row => {
+                    const purchaseId = row.dataset.purchaseId;
+                    const finishCheckbox = row.querySelector('.finish-payment-checkbox');
+                    return {
+                        id: purchaseId,
+                        description: row.querySelector('.purchase-description').value,
+                        totalAmount: parseFloat(row.querySelector('.purchase-total').value) || 0,
+                        installmentsCurrent: parseInt(row.querySelector('.installments-current').value) || 0,
+                        installmentsTotal: parseInt(row.querySelector('.installments-total').value) || 0,
+                        finished: finishCheckbox ? finishCheckbox.checked : false
+                    };
+                })
+            };
         });
-        return rows;
     }
 
     function extractTableData(bodyId) {
-        const rows = [];
-        document.querySelectorAll(`#${bodyId} tr`).forEach(row => {
-            const isManual = !row.dataset.sourceId; // Check if it's a manually added row
-            if (isManual) {
-                const descInput = row.querySelector('input[type="text"]');
-                const amountInput = row.querySelector('input[type="number"]');
-                rows.push({ 
-                    description: descInput ? descInput.value : '', 
-                    amount: parseFloat(amountInput ? amountInput.value : '0') || 0,
-                });
-            }
-        });
-        return rows;
+        return Array.from(document.querySelectorAll(`#${bodyId} tr`))
+            .filter(row => !row.dataset.sourceId) // Only manually added rows
+            .map(row => ({
+                description: row.querySelector('input[type="text"]').value,
+                amount: parseFloat(row.querySelector('input[type="number"]').value) || 0
+            }));
     }
 
     function extractLoanData() {
-        const loans = [];
-        document.querySelectorAll('#loansBody tr').forEach(row => {
-            const name = row.querySelector('input[type="text"]').value;
-            const left = parseFloat(row.querySelector('.loan-left').value) || 0;
-            const monthly = parseFloat(row.querySelector('.loan-monthly').value) || 0;
-            loans.push({ name, amountLeft: left, monthlyPayment: monthly });
-        });
-        return loans;
+        return Array.from(document.querySelectorAll('#loansBody tr')).map(row => ({
+            name: row.querySelector('input[type="text"]').value,
+            amountLeft: parseFloat(row.querySelector('.loan-left').value) || 0,
+            monthlyPayment: parseFloat(row.querySelector('.loan-monthly').value) || 0
+        }));
     }
 
     // --- UI Population and Updates ---
     function loadCurrentMonthUI() {
+        if (!budgets[currentMonth]) {
+            carryOverData();
+        }
         const data = budgets[currentMonth] || {};
         clearAllTables();
         
         loadPlannedIncome(data.plannedIncome || []);
         loadPlannedBills(data.plannedBills || []);
+        loadCreditCardData(data.creditCards || []);
         
-        // Load only manually-added items, as plan-based items are handled by rebuildActualsFromPlan
         loadTableData('incomeBody', 'income-amount', data.income || []);
         loadTableData('fixedBody', 'fixed-amount', data.fixed || []);
         loadTableData('semiFixedBody', 'semifixed-amount', data.semFixed || []);
@@ -357,102 +373,109 @@
         loadLoanData(data.loans || []);
         
         rebuildActualsFromPlan();
-        
+        updateCreditCardBillsInPlan();
         calculate();
     }
 
     function clearAllTables() {
-        ['plannedIncomeBody', 'plannedBillsBody', 'incomeBody', 'fixedBody', 'semiFixedBody', 'extraBody', 'loansBody'].forEach(clearTable);
+        ['plannedIncomeBody', 'plannedBillsBody', 'creditCardContainer', 'incomeBody', 'fixedBody', 'semiFixedBody', 'extraBody', 'loansBody'].forEach(id => {
+            document.getElementById(id).innerHTML = '';
+        });
     }
     
-    function clearTable(bodyId) {
-        document.getElementById(bodyId).innerHTML = '';
-    }
-    
-    function loadPlannedIncome(plannedIncomes) {
-        (plannedIncomes.length ? plannedIncomes : [{}]).forEach((item, index) => addPlannedIncomeRow(item, index));
+    function loadPlannedIncome(data) {
+        (data.length ? data : [{}]).forEach((item, index) => addPlannedIncomeRow(item, index));
     }
 
-    function loadPlannedBills(plannedBills) {
-        (plannedBills.length ? plannedBills : [{}]).forEach((item, index) => addPlannedBillRow(item, index));
+    function loadPlannedBills(data) {
+        (data.length ? data : [{}]).forEach((item, index) => addPlannedBillRow(item, index));
     }
     
     function rebuildActualsFromPlan() {
-        const plannedIncome = budgets[currentMonth]?.plannedIncome || [];
-        plannedIncome.forEach(item => {
-            if (item.received) {
-                addActualRow('incomeBody', { description: item.description, amount: item.amount, sourceId: item.id });
-            }
-        });
+        // Clear all derived rows first
+        document.querySelectorAll('tr[data-source-id]').forEach(row => row.remove());
 
-        const plannedBills = budgets[currentMonth]?.plannedBills || [];
-        plannedBills.forEach(item => {
+        const data = budgets[currentMonth] || {};
+        (data.plannedIncome || []).forEach(item => {
+            if (item.received) addActualRow('incomeBody', { description: item.description, amount: item.amount, sourceId: item.id });
+        });
+        (data.plannedBills || []).forEach(item => {
             if (item.paid) {
                 const targetTable = { 'fixed': 'fixedBody', 'semifixed': 'semiFixedBody', 'extra': 'extraBody' }[item.category];
-                if (targetTable) {
-                    addActualRow(targetTable, { description: item.description, amount: item.amount, sourceId: item.id });
+                if (targetTable) addActualRow(targetTable, { description: item.description, amount: item.amount, sourceId: item.id });
+            }
+        });
+        rebuildCreditCardExpenses();
+    }
+
+    function rebuildCreditCardExpenses() {
+        const cards = budgets[currentMonth]?.creditCards || [];
+        cards.forEach(card => {
+            const existingRow = document.querySelector(`#semiFixedBody tr[data-source-id="cc-bill-${card.id}"]`);
+            if (card.billPaidThisMonth) {
+                const totalBill = card.purchases.reduce((sum, p) => sum + ((p.totalAmount || 0) / (p.installmentsTotal || 1)), 0);
+                if (totalBill > 0) {
+                    if (!existingRow) {
+                        addActualRow('semiFixedBody', {
+                            description: `${card.name} Bill`,
+                            amount: totalBill.toFixed(2),
+                            sourceId: `cc-bill-${card.id}`
+                        });
+                    }
+                } else {
+                     if(existingRow) existingRow.remove();
                 }
+            } else {
+                if (existingRow) existingRow.remove();
             }
         });
     }
 
     function loadTableData(bodyId, className, data) {
-        (data && data.length > 0 ? data : []).forEach(item => {
-            if (!item.sourceId) {
-                 addRow(bodyId, className, item);
-            }
-        });
+        (data && data.length > 0 ? data : []).forEach(item => addRow(bodyId, className, item));
     }
     
-    function loadLoanData(loans) {
-        (loans && loans.length > 0 ? loans : [{}]).forEach(loan => addLoanRow(loan));
+    function loadLoanData(data) {
+        (data && data.length > 0 ? data : [{}]).forEach(loan => addLoanRow(loan));
     }
 
     // --- Global Functions for UI Interaction ---
     window.openTab = function(evt, tabName) {
-        let i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-        tablinks = document.getElementsByClassName("tab-link");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
+        document.querySelectorAll(".tab-content").forEach(tc => tc.style.display = "none");
+        document.querySelectorAll(".tab-link").forEach(tl => tl.classList.remove("active"));
         document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
+        evt.currentTarget.classList.add("active");
+    }
+    
+    window.openSubTab = function(evt, tabName) {
+        const parent = evt.target.closest('.section');
+        parent.querySelectorAll('.sub-tab-content').forEach(content => content.style.display = 'none');
+        parent.querySelectorAll('.sub-tab-link').forEach(link => link.classList.remove('active'));
+        parent.querySelector('#' + tabName).style.display = 'block';
+        evt.currentTarget.classList.add('active');
     }
 
-    // NEW: Generic function to check/uncheck all items in a planning table
     window.toggleAll = function(sourceCheckbox, bodyId) {
-        const tbody = document.getElementById(bodyId);
-        const checkboxes = tbody.querySelectorAll('input[type="checkbox"]');
-        
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked !== sourceCheckbox.checked) {
+        document.querySelectorAll(`#${bodyId} input[type="checkbox"]`).forEach(checkbox => {
+            if (checkbox.checked !== sourceCheckbox.checked && !checkbox.disabled) {
                 checkbox.checked = sourceCheckbox.checked;
-                // Simulate a change event to trigger the existing handler logic
-                checkbox.dispatchEvent(new Event('change'));
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
     }
 
     window.addRow = function(bodyId, className, item = {}) {
-        const tbody = document.getElementById(bodyId);
-        const row = tbody.insertRow();
+        const row = document.getElementById(bodyId).insertRow();
         row.innerHTML = `
             <td><input type="text" placeholder="Description" value="${item.description || ''}"></td>
             <td><input type="number" step="0.01" placeholder="0.00" class="${className}" value="${item.amount || ''}"></td>
             <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
         `;
-        attachListenersToRow(row);
     }
     
-    window.addPlannedIncomeRow = function(item = {}, index) {
-        const tbody = document.getElementById('plannedIncomeBody');
-        const row = tbody.insertRow();
-        const id = item.id || `income-${Date.now()}-${index}`; // More robust ID
-        row.dataset.id = id;
+    window.addPlannedIncomeRow = function(item = {}, index = 0) {
+        const row = document.getElementById('plannedIncomeBody').insertRow();
+        row.dataset.id = item.id || `income-${Date.now()}-${index}`;
         row.innerHTML = `
             <td><input type="text" placeholder="Source" value="${item.description || ''}"></td>
             <td><input type="number" step="0.01" placeholder="0.00" value="${item.amount || ''}"></td>
@@ -460,35 +483,34 @@
             <td><button class="delete" onclick="deletePlannedRow(this, 'income')">Delete</button></td>
         `;
         if (item.received) row.classList.add('paid');
-        attachListenersToRow(row);
     }
 
-    window.addPlannedBillRow = function(item = {}, index) {
-        const tbody = document.getElementById('plannedBillsBody');
-        const row = tbody.insertRow();
-        const id = item.id || `bill-${Date.now()}-${index}`; // More robust ID
-        row.dataset.id = id;
+    window.addPlannedBillRow = function(item = {}, index = 0, isReadOnly = false) {
+        const row = document.getElementById('plannedBillsBody').insertRow();
+        row.dataset.id = item.id || `bill-${Date.now()}-${index}`;
+        if (item.source) {
+            row.dataset.source = item.source;
+            row.dataset.cardId = item.cardId;
+        }
+        const isCreditCardBill = item.source === 'credit-card';
         row.innerHTML = `
-            <td><input type="text" placeholder="Bill Name" value="${item.description || ''}"></td>
-            <td><input type="number" step="0.01" placeholder="0.00" class="bill-amount" value="${item.amount || ''}"></td>
-            <td><input type="date" value="${item.dueDate || ''}"></td>
+            <td><input type="text" placeholder="Bill Name" value="${item.description || ''}" ${isReadOnly ? 'readonly' : ''}></td>
+            <td><input type="number" step="0.01" placeholder="0.00" class="bill-amount" value="${item.amount || ''}" ${isReadOnly ? 'readonly' : ''}></td>
+            <td><input type="date" value="${item.dueDate || ''}" ${isReadOnly ? 'readonly' : ''}></td>
             <td>
-                <select>
+                <select ${isReadOnly ? 'disabled' : ''}>
                     <option value="fixed" ${item.category === 'fixed' ? 'selected' : ''}>Fixed</option>
                     <option value="semifixed" ${item.category === 'semifixed' ? 'selected' : ''}>Semi-Fixed</option>
                     <option value="extra" ${item.category === 'extra' ? 'selected' : ''}>Extra</option>
                 </select>
             </td>
-            <td><input type="checkbox" onchange="handlePayment(this)" ${item.paid ? 'checked' : ''}></td>
-            <td><button class="delete" onclick="deletePlannedRow(this, 'bill')">Delete</button></td>
+            <td><input type="checkbox" onchange="handlePayment(this)" ${item.paid ? 'checked' : ''} ${isCreditCardBill ? 'disabled' : ''}></td>
+            <td><button class="delete" onclick="deletePlannedRow(this, 'bill')" ${isReadOnly ? 'style="display:none;"' : ''}>Delete</button></td>
         `;
         if (item.paid) row.classList.add('paid');
-        attachListenersToRow(row);
     }
     
     function addActualRow(bodyId, item) {
-        // Prevent adding duplicates
-        if (document.querySelector(`#${bodyId} tr[data-source-id="${item.sourceId}"]`)) return;
         const tbody = document.getElementById(bodyId);
         const row = tbody.insertRow();
         row.dataset.sourceId = item.sourceId; 
@@ -500,8 +522,7 @@
     }
 
     window.addLoanRow = function(loan = {}) {
-        const tbody = document.getElementById('loansBody');
-        const row = tbody.insertRow();
+        const row = document.getElementById('loansBody').insertRow();
         const monthsLeft = (loan.monthlyPayment > 0 && loan.amountLeft) ? Math.ceil(loan.amountLeft / loan.monthlyPayment) : 0;
         row.innerHTML = `
             <td><input type="text" placeholder="Loan Name" value="${loan.name || ''}"></td>
@@ -511,44 +532,20 @@
             <td><div class="loan-increase-controls"><input type="number" step="0.01" placeholder="0.00" class="loan-increase-input"><button class="increase-btn" onclick="increaseLoan(this)">+</button></div></td>
             <td><button class="delete" onclick="deleteRow(this)">Delete</button></td>
         `;
-        attachListenersToRow(row);
     }
     
     window.handleIncomeReceived = function(checkbox) {
         const row = checkbox.closest('tr');
-        const id = row.dataset.id;
-        if (checkbox.checked) {
-            row.classList.add('paid');
-            const desc = row.querySelector('input[type="text"]').value;
-            const amount = row.querySelector('input[type="number"]').value;
-            addActualRow('incomeBody', { description: desc, amount: amount, sourceId: id });
-        } else {
-            row.classList.remove('paid');
-            const existingRow = document.querySelector(`#incomeBody tr[data-source-id="${id}"]`);
-            if (existingRow) existingRow.remove();
-        }
+        row.classList.toggle('paid', checkbox.checked);
+        rebuildActualsFromPlan();
         calculate();
         autoSave();
     }
 
     window.handlePayment = function(checkbox) {
         const row = checkbox.closest('tr');
-        const id = row.dataset.id;
-        const category = row.querySelector('select').value;
-        const targetTable = { 'fixed': 'fixedBody', 'semifixed': 'semiFixedBody', 'extra': 'extraBody' }[category];
-        
-        if (!targetTable) return;
-
-        if (checkbox.checked) {
-            row.classList.add('paid');
-            const desc = row.querySelector('input[type="text"]').value;
-            const amount = row.querySelector('.bill-amount').value;
-            addActualRow(targetTable, { description: desc, amount: amount, sourceId: id });
-        } else {
-            row.classList.remove('paid');
-            const existingRow = document.querySelector(`#${targetTable} tr[data-source-id="${id}"]`);
-            if (existingRow) existingRow.remove();
-        }
+        row.classList.toggle('paid', checkbox.checked);
+        rebuildActualsFromPlan();
         calculate();
         autoSave();
     }
@@ -561,17 +558,8 @@
     
     window.deletePlannedRow = function(btn, type) {
         const row = btn.closest('tr');
-        const id = row.dataset.id;
-        let correspondingRow;
-
-        if (type === 'bill') {
-            correspondingRow = document.querySelector(`#fixedBody tr[data-source-id="${id}"], #semiFixedBody tr[data-source-id="${id}"], #extraBody tr[data-source-id="${id}"]`);
-        } else if (type === 'income') {
-            correspondingRow = document.querySelector(`#incomeBody tr[data-source-id="${id}"]`);
-        }
-        
-        if (correspondingRow) correspondingRow.remove();
         row.remove();
+        rebuildActualsFromPlan();
         calculate();
         autoSave();
     }
@@ -586,12 +574,6 @@
         document.getElementById('totalFixed').textContent = '$' + totalFixed.toFixed(2);
         document.getElementById('totalSemiFixed').textContent = '$' + totalSemiFixed.toFixed(2);
         document.getElementById('totalExtra').textContent = '$' + totalExtra.toFixed(2);
-
-        document.querySelectorAll('#loansBody tr').forEach(row => {
-            const amountLeft = parseFloat(row.querySelector('.loan-left').value) || 0;
-            const monthlyPayment = parseFloat(row.querySelector('.loan-monthly').value) || 0;
-            row.querySelector('.loan-months').value = monthlyPayment > 0 ? Math.ceil(amountLeft / monthlyPayment) : 0;
-        });
         
         const totalExpenses = totalFixed + totalSemiFixed + totalExtra;
         const balance = totalIncome - totalExpenses;
@@ -605,6 +587,184 @@
         updateExtract();
     }
     
+    // --- Credit Card Specific Functions ---
+    function carryOverData() {
+        const [year, month] = currentMonth.split('-').map(Number);
+        const prevDate = new Date(year, month - 2, 15);
+        const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+        const prevMonthData = budgets[prevMonth];
+        if (!prevMonthData) return;
+
+        const newCards = (prevMonthData.creditCards || []).map(card => ({
+            id: card.id,
+            name: card.name,
+            billPaidThisMonth: false,
+            purchases: (card.purchases || [])
+                .filter(p => !p.finished)
+                .map(p => ({
+                    ...p,
+                    installmentsCurrent: p.installmentsCurrent + 1,
+                })).filter(p => p.installmentsCurrent <= p.installmentsTotal)
+        }));
+
+        if (!budgets[currentMonth]) budgets[currentMonth] = {};
+        budgets[currentMonth].creditCards = newCards;
+    }
+
+    function loadCreditCardData(cards = []) {
+        document.getElementById('creditCardContainer').innerHTML = '';
+        cards.forEach(card => addCreditCardAccount(card));
+    }
+
+    window.addCreditCardAccount = function(cardData = {}) {
+        const cardId = cardData.id || `cc-${Date.now()}`;
+        const container = document.getElementById('creditCardContainer');
+        
+        const section = document.createElement('div');
+        section.className = 'credit-card-section';
+        section.dataset.cardId = cardId;
+        
+        const totalBill = (cardData.purchases || []).reduce((sum, p) => sum + ((p.totalAmount || 0) / (p.installmentsTotal || 1)), 0);
+
+        section.innerHTML = `
+            <div class="credit-card-header">
+                <input type="text" class="credit-card-name" placeholder="Credit Card Name" value="${cardData.name || ''}">
+                <div class="credit-card-header-controls">
+                     <div class="credit-card-total-display">
+                        <label>Monthly Bill:</label>
+                        <input type="text" class="credit-card-total-input" value="$${totalBill.toFixed(2)}" readonly>
+                    </div>
+                    <div class="card-paid-control">
+                        <label>Paid</label>
+                        <input type="checkbox" class="card-paid-checkbox" onchange="handleCardBillPaid(this, '${cardId}')" ${cardData.billPaidThisMonth ? 'checked' : ''}>
+                    </div>
+                    <button class="delete" onclick="deleteCreditCard(this)">Delete Card</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="width: 130px;">Total Amount</th>
+                        <th style="width: 150px;">Installments</th>
+                        <th style="width: 130px;">Monthly Pay</th>
+                        <th style="width: 180px;">Finished Paying</th>
+                        <th style="width: 100px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="credit-card-purchases-body"></tbody>
+            </table>
+            <button onclick="addCreditCardPurchase('${cardId}')">+ Add Purchase</button>
+        `;
+        container.appendChild(section);
+
+        const purchasesBody = section.querySelector('.credit-card-purchases-body');
+        (cardData.purchases || []).forEach(p => addCreditCardPurchaseRow(purchasesBody, p));
+    }
+    
+    function addCreditCardPurchaseRow(tbody, purchaseData = {}) {
+        const purchaseId = purchaseData.id || `pur-${Date.now()}`;
+        const row = tbody.insertRow();
+        row.className = 'purchase-row';
+        row.dataset.purchaseId = purchaseId;
+
+        const total = purchaseData.totalAmount || 0;
+        const current = purchaseData.installmentsCurrent || 0;
+        const totalInstallments = purchaseData.installmentsTotal || 0;
+        const monthly = totalInstallments > 0 ? (total / totalInstallments).toFixed(2) : '0.00';
+
+        let finishedHtml = '<td>N/A</td>';
+        if (current > 0 && current === totalInstallments) {
+            finishedHtml = `
+                <td>
+                    <div class="finish-payment-control">
+                        <label>Mark as Finished</label>
+                        <input type="checkbox" class="finish-payment-checkbox" ${purchaseData.finished ? 'checked' : ''}>
+                    </div>
+                </td>`;
+        }
+        
+        row.innerHTML = `
+            <td><input type="text" class="purchase-description" placeholder="e.g., New Laptop" value="${purchaseData.description || ''}"></td>
+            <td><input type="number" step="0.01" class="purchase-total" placeholder="1200.00" value="${total || ''}"></td>
+            <td>
+                <div class="installments-input">
+                    <input type="number" class="installments-current" placeholder="1" value="${current || ''}">
+                    <span>/</span>
+                    <input type="number" class="installments-total" placeholder="12" value="${totalInstallments || ''}">
+                </div>
+            </td>
+            <td><input type="number" class="purchase-monthly" value="${monthly}" readonly></td>
+            ${finishedHtml}
+            <td><button class="delete" onclick="deleteCreditCardPurchase(this)">Delete</button></td>
+        `;
+    }
+    
+    window.addCreditCardPurchase = function(cardId) {
+        const cardSection = document.querySelector(`.credit-card-section[data-card-id="${cardId}"]`);
+        if(cardSection){
+            addCreditCardPurchaseRow(cardSection.querySelector('.credit-card-purchases-body'));
+        }
+    }
+
+    window.deleteCreditCard = function(btn) {
+        const cardSection = btn.closest('.credit-card-section');
+        cardSection.remove();
+        autoSave();
+        loadCurrentMonthUI(); // Force a full reload to ensure dependent data is cleared
+    }
+
+    window.deleteCreditCardPurchase = function(btn) {
+        const row = btn.closest('tr');
+        const cardSection = row.closest('.credit-card-section');
+        row.remove();
+        updateCardOnInputChange(cardSection); // Update totals
+    }
+
+    window.handleCardBillPaid = function(checkbox, cardId) {
+        const card = budgets[currentMonth].creditCards.find(c => c.id === cardId);
+        if (card) card.billPaidThisMonth = checkbox.checked;
+
+        const billRowCheckbox = document.querySelector(`#plannedBillsBody tr[data-card-id="${cardId}"] input[type="checkbox"]`);
+        if (billRowCheckbox) {
+            billRowCheckbox.checked = checkbox.checked;
+            billRowCheckbox.closest('tr').classList.toggle('paid', checkbox.checked);
+        }
+        rebuildCreditCardExpenses();
+        calculate();
+        autoSave();
+    }
+    
+    function updateCreditCardBillsInPlan() {
+        document.querySelectorAll('#plannedBillsBody tr[data-source="credit-card"]').forEach(row => row.remove());
+        const cards = budgets[currentMonth]?.creditCards || [];
+        cards.forEach(card => {
+            const totalBill = card.purchases.reduce((sum, p) => sum + ((p.totalAmount || 0) / (p.installmentsTotal || 1)), 0);
+            if (totalBill > 0) {
+                addPlannedBillRow({
+                    cardId: card.id,
+                    description: `${card.name} Bill`,
+                    amount: totalBill.toFixed(2),
+                    category: 'semifixed',
+                    paid: card.billPaidThisMonth || false,
+                    source: 'credit-card'
+                }, 0, true);
+            }
+        });
+    }
+
+    function updateCardOnInputChange(cardSection) {
+        const purchases = Array.from(cardSection.querySelectorAll('.purchase-row'));
+        const totalBill = purchases.reduce((sum, row) => {
+            const total = parseFloat(row.querySelector('.purchase-total').value) || 0;
+            const installments = parseInt(row.querySelector('.installments-total').value) || 1;
+            return sum + (total / installments);
+        }, 0);
+        cardSection.querySelector('.credit-card-total-input').value = `$${totalBill.toFixed(2)}`;
+        autoSave();
+    }
+
+
     // --- Import/Export and Listeners ---
     function updateImportMonthOptions() {
         const select = document.getElementById('importMonth');
@@ -619,119 +779,82 @@
         });
     }
     
-    // REVISED: Import functions now update the state and reload the entire UI
-    window.importIncome = function() {
+    function importData(dataType) {
         const selectedMonth = document.getElementById('importMonth').value;
         if (!selectedMonth || !budgets[selectedMonth]) return;
-
         if (!budgets[currentMonth]) budgets[currentMonth] = {};
-
-        // Deep copy to prevent reference issues
-        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].plannedIncome || []));
-        budgets[currentMonth].plannedIncome = importedData;
-        
-        loadCurrentMonthUI(); // Reload UI from the new state
-        autoSave();
-    }
-    
-    window.importBills = function() {
-        const selectedMonth = document.getElementById('importMonth').value;
-        if (!selectedMonth || !budgets[selectedMonth]) return;
-
-        if (!budgets[currentMonth]) budgets[currentMonth] = {};
-        
-        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].plannedBills || []));
-        budgets[currentMonth].plannedBills = importedData;
-        
+        budgets[currentMonth][dataType] = JSON.parse(JSON.stringify(budgets[selectedMonth][dataType] || []));
         loadCurrentMonthUI();
         autoSave();
     }
-
-    window.importFixedExpenses = function() {
-        const selectedMonth = document.getElementById('importMonth').value;
-        if (!selectedMonth || !budgets[selectedMonth]) return;
-
-        if (!budgets[currentMonth]) budgets[currentMonth] = {};
-
-        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].fixed || []));
-        budgets[currentMonth].fixed = importedData;
-
-        loadCurrentMonthUI();
-        autoSave();
-    }
-
-    window.importSemiFixedExpenses = function() {
-        const selectedMonth = document.getElementById('importMonth').value;
-        if (!selectedMonth || !budgets[selectedMonth]) return;
-
-        if (!budgets[currentMonth]) budgets[currentMonth] = {};
-
-        const importedData = JSON.parse(JSON.stringify(budgets[selectedMonth].semFixed || []));
-        budgets[currentMonth].semFixed = importedData;
-
-        loadCurrentMonthUI();
-        autoSave();
-    }
+    window.importIncome = () => importData('plannedIncome');
+    window.importBills = () => importData('plannedBills');
+    window.importFixedExpenses = () => importData('fixed');
+    window.importSemiFixedExpenses = () => importData('semFixed');
     
     window.increaseLoan = function(btn) {
         const row = btn.closest('tr');
         const increaseInput = row.querySelector('.loan-increase-input');
         const leftInput = row.querySelector('.loan-left');
-        const increaseAmount = parseFloat(increaseInput.value) || 0;
-        if (increaseAmount <= 0) return;
-        leftInput.value = ((parseFloat(leftInput.value) || 0) + increaseAmount).toFixed(2);
+        leftInput.value = ((parseFloat(leftInput.value) || 0) + (parseFloat(increaseInput.value) || 0)).toFixed(2);
         increaseInput.value = '';
-        calculate();
         autoSave();
     }
 
     function updateExtract() {
         const grid = document.getElementById('extractGrid');
         grid.innerHTML = '';
-        const balanceText = document.getElementById('finalBalance').textContent;
-        addExtractItem(grid, 'Total Received Income', document.getElementById('totalIncome').textContent, '#2ecc71');
-        addExtractItem(grid, 'Fixed Expenses', document.getElementById('totalFixed').textContent, '#e74c3c');
-        addExtractItem(grid, 'Semi-Fixed Expenses', document.getElementById('totalSemiFixed').textContent, '#e67e22');
-        addExtractItem(grid, 'Total Extra Expenses', document.getElementById('totalExtra').textContent, '#f39c12');
-        addExtractItem(grid, 'Total Expenses', document.getElementById('totalExpenses').textContent, '#c0392b');
-        addExtractItem(grid, 'Final Balance', balanceText, balanceText.includes('-') ? '#e74c3c' : '#27ae60');
-    }
-
-    function addExtractItem(grid, title, amount, color) {
-        const item = document.createElement('div');
-        item.className = 'extract-item';
-        item.style.borderLeftColor = color;
-        item.innerHTML = `<h4>${title}</h4><div class="amount">${amount}</div>`;
-        grid.appendChild(item);
+        const data = {
+            'Total Received Income': { amount: document.getElementById('totalIncome').textContent, color: '#2ecc71' },
+            'Fixed Expenses': { amount: document.getElementById('totalFixed').textContent, color: '#e74c3c' },
+            'Semi-Fixed Expenses': { amount: document.getElementById('totalSemiFixed').textContent, color: '#e67e22' },
+            'Total Extra Expenses': { amount: document.getElementById('totalExtra').textContent, color: '#f39c12' },
+            'Total Expenses': { amount: document.getElementById('totalExpenses').textContent, color: '#c0392b' },
+            'Final Balance': { amount: document.getElementById('finalBalance').textContent, color: document.getElementById('finalBalance').textContent.includes('-') ? '#e74c3c' : '#27ae60' }
+        };
+        for (const [title, { amount, color }] of Object.entries(data)) {
+            const item = document.createElement('div');
+            item.className = 'extract-item';
+            item.style.borderLeftColor = color;
+            item.innerHTML = `<h4>${title}</h4><div class="amount">${amount}</div>`;
+            grid.appendChild(item);
+        }
     }
 
     function attachListeners() {
-        const container = document.querySelector('.container');
-        container.addEventListener('input', (e) => {
-            if (e.target.matches('input, select')) {
+        document.querySelector('.container').addEventListener('input', (e) => {
+            if (e.target.matches('input, select') && !e.target.matches('[type="checkbox"]')) {
+                const cardSection = e.target.closest('.credit-card-section');
+                if (cardSection) {
+                    updateCardOnInputChange(cardSection);
+                } else {
+                    autoSave();
+                }
+                 // Always calculate on any input
+                rebuildActualsFromPlan();
                 calculate();
-                autoSave();
             }
         });
 
+         document.querySelector('.container').addEventListener('change', (e) => {
+             if (e.target.matches('input[type="checkbox"]')) {
+                 autoSave();
+                 rebuildActualsFromPlan();
+                 calculate();
+             }
+         });
+
+
         document.getElementById('month').addEventListener('change', (e) => {
-            saveCurrentMonth();
+            saveCurrentMonth(); 
             currentMonth = e.target.value;
             loadCurrentMonthUI();
         });
     }
     
-    function attachListenersToRow(row) {
-        row.querySelectorAll('input, select').forEach(input => {
-            input.addEventListener('input', () => {
-                calculate();
-                autoSave();
-            });
-        });
-    }
-
     // --- App Start ---
     document.addEventListener('DOMContentLoaded', initializeFirebase);
     </script>
 </body>
 </html>
+
